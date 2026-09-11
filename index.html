@@ -323,10 +323,10 @@
 
   function formatTimeInput(e) {
     let input = e.target;
-    let digits = input.value.replace(/\D/g, ''); // Extract numbers only
+    let digits = input.value.replace(/\D/g, '');
     
     if (e.inputType === 'deleteContentBackward') {
-      return; // Allow direct backspacing
+      return;
     }
 
     if (digits.length === 0) {
@@ -336,8 +336,7 @@
 
     let first = parseInt(digits[0], 10);
 
-    // If first digit is > 1 (e.g. 2 to 9), it cannot be a 2-digit 12-hour value (max is 12)
-    // Automatically pad with leading zero and append colon
+    // If first digit is > 1 (2-9), it can only be a single-digit hour
     if (first > 1 && digits.length === 1) {
       input.value = '0' + digits[0] + ':';
       return;
@@ -345,9 +344,8 @@
 
     if (digits.length >= 2) {
       let hours = parseInt(digits.substring(0, 2), 10);
-      let mins = digits.substring(2, 4);
+      let rawMins = digits.substring(2, 4);
 
-      // Clamp hour between 01 and 12
       if (hours > 12) {
         hours = 12;
       } else if (hours === 0) {
@@ -355,8 +353,19 @@
       }
       let formattedHours = hours < 10 ? '0' + hours : '' + hours;
 
-      if (mins.length > 0) {
-        input.value = formattedHours + ':' + mins;
+      if (rawMins.length > 0) {
+        // Enforce maximum of 59 for minutes
+        let minsNum = parseInt(rawMins, 10);
+        let firstMinDigit = parseInt(rawMins[0], 10);
+
+        if (rawMins.length === 1 && firstMinDigit > 5) {
+          // If the user types 6-9 as the first minute digit, clamp to 59
+          rawMins = '59';
+        } else if (rawMins.length === 2 && minsNum > 59) {
+          rawMins = '59';
+        }
+
+        input.value = formattedHours + ':' + rawMins;
       } else {
         input.value = formattedHours + ':';
       }
