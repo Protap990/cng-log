@@ -13,7 +13,7 @@
     .card {
       position: relative;
       overflow: hidden;
-      background-color: #111e38;
+      background-color: #111e34;
       width: 100%;
       max-width: 480px;
       border-radius: 12px;
@@ -22,7 +22,6 @@
       border: 1px solid #1e293b;
     }
 
-    /* Top Left Subtle Watermark */
     .powered-by {
       position: absolute;
       top: 8px;
@@ -35,7 +34,6 @@
       z-index: 1;
     }
 
-    /* Large Centered HPCL Watermark */
     .card::before {
       content: "HPCL";
       position: absolute;
@@ -51,8 +49,7 @@
       letter-spacing: 4px;
     }
 
-    /* Ensure interactive elements stay on top of the watermark */
-    h2, .section-title, .row, .btn-group, pre {
+    h2, .section-title, .row, .btn-group, pre, .or-divider {
       position: relative;
       z-index: 2;
     }
@@ -62,7 +59,7 @@
     .row { display: flex; gap: 10px; margin-bottom: 10px; }
     .col { flex: 1; display: flex; flex-direction: column; }
     label { font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; }
-    input[type="text"], input[type="number"], input[type="tel"] {
+    input[type="text"], input[type="number"] {
       background-color: #1a2744; border: 1px solid #2d3f66; color: #fff; padding: 10px; border-radius: 6px; font-size: 0.95rem; width: 100%; outline: none; -webkit-appearance: none;
     }
     input:focus { border-color: #38bdf8; }
@@ -77,6 +74,24 @@
     .ampm-toggle input { display: none; }
     .ampm-toggle input:checked + span { background-color: #0284c7; color: #fff; }
     .ampm-toggle span { display: block; padding: 10px 8px; border-radius: 4px; }
+    
+    .or-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 4px 0 8px;
+      color: #64748b;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px dashed #2d3f66;
+    }
+    .or-divider:not(:empty)::before { margin-right: .5em; }
+    .or-divider:not(:empty)::after { margin-left: .5em; }
+
     .btn-group { display: flex; gap: 10px; margin-top: 18px; }
     button {
       flex: 1; padding: 12px; border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
@@ -165,7 +180,16 @@
       <input type="number" id="t1bBefore" placeholder="e.g. 15243" step="any" />
     </div>
   </div>
+
+  <div class="or-divider">OR (DIRECT TOTAL BEFORE)</div>
   <div class="row">
+    <div class="col">
+      <label>Total Before Filling (KG) - Optional</label>
+      <input type="number" id="tTotalBeforeDirect" placeholder="e.g. 30443 (bypass 1A & 1B)" step="any" />
+    </div>
+  </div>
+
+  <div class="row" style="margin-top: 6px;">
     <div class="col">
       <label>Tank 1A After (KG)</label>
       <input type="number" id="t1aAfter" placeholder="e.g. 14780" step="any" />
@@ -239,15 +263,33 @@
 
     const t1aB = parseFloat(document.getElementById('t1aBefore').value);
     const t1bB = parseFloat(document.getElementById('t1bBefore').value);
+    const directTotalB = parseFloat(document.getElementById('tTotalBeforeDirect').value);
+
     const t1aA = parseFloat(document.getElementById('t1aAfter').value);
     const t1bA = parseFloat(document.getElementById('t1bAfter').value);
 
     const fmB = parseFloat(document.getElementById('fmBefore').value);
     const fmA = parseFloat(document.getElementById('fmAfter').value);
 
-    // Alert if any field is empty
+    // Resolve "Before" Tank Total: Direct Total takes priority if individual values aren't fully provided
+    let tankBeforeTotal = null;
+    let beforeString = "";
+
+    if (!isNaN(directTotalB)) {
+      tankBeforeTotal = directTotalB;
+      beforeString = `${directTotalB} Kg.`;
+    } else if (!isNaN(t1aB) && !isNaN(t1bB)) {
+      tankBeforeTotal = t1aB + t1bB;
+      beforeString = `${t1aB} + ${t1bB}= ${tankBeforeTotal} Kg.`;
+    } else {
+      beforeString = `${!isNaN(t1aB) ? t1aB : '--'} + ${!isNaN(t1bB) ? t1bB : '--'}= -- Kg.`;
+    }
+
+    const hasValidBefore = tankBeforeTotal !== null;
+
+    // Check if any required field is missing
     const isMissing = !lcv || !pumps || !p21aStart || !p21aStop || !p21bStart || !p21bStop ||
-                      isNaN(t1aB) || isNaN(t1bB) || isNaN(t1aA) || isNaN(t1bA) ||
+                      !hasValidBefore || isNaN(t1aA) || isNaN(t1bA) ||
                       isNaN(fmB) || isNaN(fmA);
 
     if (isMissing) {
@@ -255,10 +297,8 @@
     }
 
     // Calculations
-    const tankBeforeTotal = (!isNaN(t1aB) && !isNaN(t1bB)) ? (t1aB + t1bB) : null;
     const tankAfterTotal = (!isNaN(t1aA) && !isNaN(t1bA)) ? (t1aA + t1bA) : null;
     const tankDiff = (tankBeforeTotal !== null && tankAfterTotal !== null) ? Math.abs(tankBeforeTotal - tankAfterTotal) : null;
-
     const fmDiff = (!isNaN(fmA) && !isNaN(fmB)) ? Math.abs(fmA - fmB) : null;
 
     // Build Output
@@ -274,7 +314,7 @@ Pump P21B Start Time:- ${p21bStart || '--'} ${p21bStartAmpm}.
 Pump P21B Stop Time:- ${p21bStop || '--'} ${p21bStopAmpm}.
 
 Tank 1A & 1B before filling:-
-${!isNaN(t1aB) ? t1aB : '--'} + ${!isNaN(t1bB) ? t1bB : '--'}= ${tankBeforeTotal !== null ? tankBeforeTotal : '--'} Kg.
+${beforeString}
 
 Tank 1A & 1B after filling:-
 ${!isNaN(t1aA) ? t1aA : '--'} + ${!isNaN(t1bA) ? t1bA : '--'}= ${tankAfterTotal !== null ? tankAfterTotal : '--'} Kg.
