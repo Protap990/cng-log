@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="Hplogo.png" />
   <link rel="apple-touch-icon" href="Hplogo.png" />
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body {
       background: radial-gradient(circle at top, #0f2042 0%, #060b18 100%);
       color: #f1f5f9;
@@ -59,7 +59,7 @@
       letter-spacing: 6px;
     }
 
-    h2, .section-title, .row, .btn-group, .chat-preview-wrap, .or-divider {
+    h2, .section-title, .row, .btn-group, pre, .or-divider {
       position: relative;
       z-index: 2;
     }
@@ -184,41 +184,19 @@
       color: #fff;
       box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
     }
-
-    /* WhatsApp Style Bubble Container */
-    .chat-preview-wrap {
-      margin-top: 20px;
-      background: #091422;
-      border-radius: 14px;
-      padding: 14px;
-      border: 1px solid #1c2e4a;
-    }
-    .chat-label {
-      font-size: 0.72rem;
-      color: #38bdf8;
-      font-weight: 700;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .wa-bubble {
-      background-color: #d9fdd3;
-      color: #111b21;
+    
+    pre {
+      background: #080f1e;
+      border: 1px solid #1e3057;
+      border-left: 4px solid #38bdf8;
       border-radius: 10px;
-      border-top-left-radius: 3px;
-      padding: 12px 14px;
-      font-size: 0.95rem;
-      line-height: 1.45;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+      padding: 14px;
+      font-size: 0.85rem;
+      color: #e2e8f0;
       white-space: pre-wrap;
       word-wrap: break-word;
-      user-select: text;
-    }
-    .wa-link {
-      color: #027eb5;
-      text-decoration: underline;
-      cursor: pointer;
-      font-weight: 500;
+      line-height: 1.5;
+      margin-top: 18px;
     }
   </style>
 </head>
@@ -335,15 +313,11 @@
     <button class="btn-copy" onclick="copyText()">Copy Text</button>
   </div>
 
-  <div class="chat-preview-wrap">
-    <div class="chat-label">WhatsApp Message Preview (Tap to select or click copy)</div>
-    <div id="outputBubble" class="wa-bubble">Tap "Calculate & Format" to generate the message...</div>
-  </div>
+  <pre id="outputLog">Output preview will appear here...</pre>
 </div>
 
 <script>
   let p21bManual = false;
-  let rawClipboardText = "";
 
   const timeInputs = ['p21aStart', 'p21aStop', 'p21bStart', 'p21bStop'];
 
@@ -471,12 +445,8 @@
     const tankDiff = (tankBeforeTotal !== null && tankAfterTotal !== null) ? Math.abs(tankBeforeTotal - tankAfterTotal) : null;
     const fmDiff = (!isNaN(fmA) && !isNaN(fmB)) ? Math.abs(fmA - fmB) : null;
 
-    const fmBVal = !isNaN(fmB) ? fmB : '--';
-    const fmAVal = !isNaN(fmA) ? fmA : '--';
-
-    // 1. Raw Text for Clipboard & WhatsApp pasting
-    rawClipboardText = 
-`CNG LCV filling completed.
+    const report = 
+`CNG LCV filling completed. 
 Pump Used:- ${pumps || '--'}
 Number of LCV= ${lcv || '--'}
 
@@ -488,52 +458,28 @@ Pump P21B Stop Time:- ${p21bStop || '--'} ${p21bStopAmpm}.
 
 Total Tank(1A+1B) Quantity Before LCV Filling:  ${tankBeforeTotal !== null ? tankBeforeTotal : '--'} KG
 
-Total Tank(1A+1B) Quantity After LCV Filling: ${tankAfterTotal !== null ? tankAfterTotal : '--'} KG
+Total Tank(1A+1B) Quantity After LCV Filling: ${tankAfterTotal !== null ? tankAfterTotal : '--'}  KG
 
 Difference: ${tankDiff !== null ? tankDiff : '--'} KG
 
 FM101 (Before Filling):
-${fmBVal} KG
+${!isNaN(fmB) ? fmB : '--'} KG
 FM101 (After Filling):
-${fmAVal} KG
+${!isNaN(fmA) ? fmA : '--'} KG
 
 Difference: ${fmDiff !== null ? fmDiff : '--'} KG`;
 
-    // 2. HTML formatted for visual WhatsApp bubble with blue underlined digits
-    const htmlPreview = 
-`CNG LCV filling completed.
-Pump Used:- ${pumps || '--'}
-Number of LCV= ${lcv || '--'}
-
-Pump P21A Start Time:- ${p21aStart || '--'} ${p21aStartAmpm}.
-Pump P21A Stop Time:- ${p21aStop || '--'} ${p21aStopAmpm}.
-
-Pump P21B Start Time:- ${p21bStart || '--'} ${p21bStartAmpm}.
-Pump P21B Stop Time:- ${p21bStop || '--'} ${p21bStopAmpm}.
-
-Total Tank(1A+1B) Quantity Before LCV Filling:  ${tankBeforeTotal !== null ? tankBeforeTotal : '--'} KG
-
-Total Tank(1A+1B) Quantity After LCV Filling: ${tankAfterTotal !== null ? tankAfterTotal : '--'} KG
-
-Difference: ${tankDiff !== null ? tankDiff : '--'} KG
-
-FM101 (Before Filling):
-<span class="wa-link">${fmBVal}</span> KG
-FM101 (After Filling):
-<span class="wa-link">${fmAVal}</span> KG
-
-Difference: ${fmDiff !== null ? fmDiff : '--'} KG`;
-
-    document.getElementById('outputBubble').innerHTML = htmlPreview;
+    document.getElementById('outputLog').innerText = report;
   }
 
   function copyText() {
-    if (!rawClipboardText) {
+    const text = document.getElementById('outputLog').innerText;
+    if (!text || text.startsWith('Output preview')) {
       alert('Please calculate the report first!');
       return;
     }
-    navigator.clipboard.writeText(rawClipboardText).then(() => {
-      alert('Report copied to clipboard! Paste directly into WhatsApp.');
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Report copied to clipboard!');
     }).catch(() => {
       alert('Failed to copy. Please select and copy manually.');
     });
