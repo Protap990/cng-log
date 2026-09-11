@@ -336,7 +336,6 @@
 
     let first = parseInt(digits[0], 10);
 
-    // If first digit is > 1 (2-9), it can only be a single-digit hour
     if (first > 1 && digits.length === 1) {
       input.value = '0' + digits[0] + ':';
       return;
@@ -354,12 +353,10 @@
       let formattedHours = hours < 10 ? '0' + hours : '' + hours;
 
       if (rawMins.length > 0) {
-        // Enforce maximum of 59 for minutes
         let minsNum = parseInt(rawMins, 10);
         let firstMinDigit = parseInt(rawMins[0], 10);
 
         if (rawMins.length === 1 && firstMinDigit > 5) {
-          // If the user types 6-9 as the first minute digit, clamp to 59
           rawMins = '59';
         } else if (rawMins.length === 2 && minsNum > 59) {
           rawMins = '59';
@@ -428,16 +425,10 @@
     const fmA = parseFloat(document.getElementById('fmAfter').value);
 
     let tankBeforeTotal = null;
-    let beforeString = "";
-
     if (!isNaN(directTotalB)) {
       tankBeforeTotal = directTotalB;
-      beforeString = `${directTotalB} Kg.`;
     } else if (!isNaN(t1aB) && !isNaN(t1bB)) {
       tankBeforeTotal = t1aB + t1bB;
-      beforeString = `${t1aB} + ${t1bB}= ${tankBeforeTotal} Kg.`;
-    } else {
-      beforeString = `${!isNaN(t1aB) ? t1aB : '--'} + ${!isNaN(t1bB) ? t1bB : '--'}= -- Kg.`;
     }
 
     const hasValidBefore = tankBeforeTotal !== null;
@@ -455,7 +446,7 @@
     const fmDiff = (!isNaN(fmA) && !isNaN(fmB)) ? Math.abs(fmA - fmB) : null;
 
     const report = 
-`CNG LCV filling completed.
+`CNG LCV filling completed. 
 Pump Used:- ${pumps || '--'}
 Number of LCV= ${lcv || '--'}
 
@@ -465,17 +456,18 @@ Pump P21A Stop Time:- ${p21aStop || '--'} ${p21aStopAmpm}.
 Pump P21B Start Time:- ${p21bStart || '--'} ${p21bStartAmpm}.
 Pump P21B Stop Time:- ${p21bStop || '--'} ${p21bStopAmpm}.
 
-Tank 1A & 1B before filling:-
-${beforeString}
+Total Tank(1A+1B) Quantity Before LCV Filling:  ${tankBeforeTotal !== null ? tankBeforeTotal : '--'} KG
 
-Tank 1A & 1B after filling:-
-${!isNaN(t1aA) ? t1aA : '--'} + ${!isNaN(t1bA) ? t1bA : '--'}= ${tankAfterTotal !== null ? tankAfterTotal : '--'} Kg.
+Total Tank(1A+1B) Quantity After LCV Filling: ${tankAfterTotal !== null ? tankAfterTotal : '--'}  KG
 
-Total Quantity (${tankBeforeTotal !== null ? tankBeforeTotal : '--'} - ${tankAfterTotal !== null ? tankAfterTotal : '--'})= ${tankDiff !== null ? tankDiff.toFixed(2) : '--'} Kg.
+Difference: ${tankDiff !== null ? tankDiff : '--'} KG
 
-FM101 Before Filling:- ${!isNaN(fmB) ? fmB : '--'} Kg.
-FM101 After Filling:- ${!isNaN(fmA) ? fmA : '--'} Kg.
-Total Filling Quantity:- ${fmDiff !== null ? fmDiff.toFixed(2) : '--'} Kg.`;
+FM101 (Before Filling):
+${!isNaN(fmB) ? fmB : '--'} KG
+FM101 (After Filling):
+${!isNaN(fmA) ? fmA : '--'} KG
+
+Difference: ${fmDiff !== null ? fmDiff : '--'} KG`;
 
     document.getElementById('outputLog').innerText = report;
   }
