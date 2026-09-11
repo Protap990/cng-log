@@ -15,17 +15,17 @@
     .row { display: flex; gap: 10px; margin-bottom: 10px; }
     .col { flex: 1; display: flex; flex-direction: column; }
     label { font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; }
-    input[type="text"], input[type="number"], input[type="time"] {
-      background-color: #1a2744; border: 1px solid #2d3f66; color: #fff; padding: 10px; border-radius: 6px; font-size: 0.95rem; width: 100%; outline: none;
+    input[type="text"], input[type="number"], input[type="tel"] {
+      background-color: #1a2744; border: 1px solid #2d3f66; color: #fff; padding: 10px; border-radius: 6px; font-size: 0.95rem; width: 100%; outline: none; -webkit-appearance: none;
     }
     input:focus { border-color: #38bdf8; }
     .time-group { display: flex; gap: 4px; }
-    .time-group input { flex: 1; }
+    .time-group input { flex: 1; min-width: 0; }
     .ampm-toggle {
       display: flex; background-color: #1a2744; border: 1px solid #2d3f66; border-radius: 6px; overflow: hidden;
     }
     .ampm-toggle label {
-      padding: 8px 10px; font-size: 0.75rem; font-weight: bold; cursor: pointer; color: #94a3b8; margin-bottom: 0; user-select: none;
+      font-size: 0.75rem; font-weight: bold; cursor: pointer; color: #94a3b8; margin-bottom: 0; user-select: none;
     }
     .ampm-toggle input { display: none; }
     .ampm-toggle input:checked + span { background-color: #0284c7; color: #fff; }
@@ -63,7 +63,7 @@
     <div class="col">
       <label>Pump P21A Start Time</label>
       <div class="time-group">
-        <input type="text" id="p21aStart" placeholder="04:27" oninput="syncStartTimes()" />
+        <input type="text" inputmode="numeric" id="p21aStart" placeholder="04:27" oninput="syncStartTimes()" onkeyup="syncStartTimes()" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21aStartAmpm" value="AM" onchange="syncAmpm()"/><span>AM</span></label>
           <label><input type="radio" name="p21aStartAmpm" value="PM" checked onchange="syncAmpm()"/><span>PM</span></label>
@@ -73,7 +73,7 @@
     <div class="col">
       <label>Pump P21A Stop Time</label>
       <div class="time-group">
-        <input type="text" id="p21aStop" placeholder="05:27" />
+        <input type="text" inputmode="numeric" id="p21aStop" placeholder="05:27" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21aStopAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21aStopAmpm" value="PM" checked/><span>PM</span></label>
@@ -86,7 +86,7 @@
     <div class="col">
       <label>Pump P21B Start Time (Auto)</label>
       <div class="time-group">
-        <input type="text" id="p21bStart" placeholder="04:27" />
+        <input type="text" inputmode="numeric" id="p21bStart" placeholder="04:27" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21bStartAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21bStartAmpm" value="PM" checked/><span>PM</span></label>
@@ -96,7 +96,7 @@
     <div class="col">
       <label>Pump P21B Stop Time</label>
       <div class="time-group">
-        <input type="text" id="p21bStop" placeholder="05:36" />
+        <input type="text" inputmode="numeric" id="p21bStop" placeholder="05:36" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21bStopAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21bStopAmpm" value="PM" checked/><span>PM</span></label>
@@ -149,7 +149,10 @@
 
 <script>
   let p21bManual = false;
-  document.getElementById('p21bStart').addEventListener('input', () => { p21bManual = true; });
+  const p21bStartInput = document.getElementById('p21bStart');
+  
+  p21bStartInput.addEventListener('input', () => { p21bManual = true; });
+  p21bStartInput.addEventListener('focus', () => { p21bManual = true; });
 
   function syncStartTimes() {
     if (!p21bManual) {
@@ -158,9 +161,11 @@
   }
 
   function syncAmpm() {
-    const val = document.querySelector('input[name="p21aStartAmpm"]:checked').value;
-    if (!p21bManual) {
-      document.querySelector(`input[name="p21bStartAmpm"][value="${val}"]`).checked = true;
+    const checked = document.querySelector('input[name="p21aStartAmpm"]:checked');
+    if (checked && !p21bManual) {
+      const val = checked.value;
+      const target = document.querySelector(`input[name="p21bStartAmpm"][value="${val}"]`);
+      if (target) target.checked = true;
     }
   }
 
@@ -191,7 +196,7 @@
     const fmB = parseFloat(document.getElementById('fmBefore').value);
     const fmA = parseFloat(document.getElementById('fmAfter').value);
 
-    // Check if any field is empty/missing
+    // Alert if any field is empty
     const isMissing = !lcv || !pumps || !p21aStart || !p21aStop || !p21bStart || !p21bStop ||
                       isNaN(t1aB) || isNaN(t1bB) || isNaN(t1aA) || isNaN(t1bA) ||
                       isNaN(fmB) || isNaN(fmA);
@@ -207,7 +212,7 @@
 
     const fmDiff = (!isNaN(fmA) && !isNaN(fmB)) ? Math.abs(fmA - fmB) : null;
 
-    // Build Formatted Output
+    // Build Output
     const report = 
 `CNG LCV filling completed.
 Pump Used:- ${pumps || '--'}
