@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="Hplogo.png" />
   <link rel="apple-touch-icon" href="Hplogo.png" />
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body {
       background: radial-gradient(circle at top, #0f2042 0%, #060b18 100%);
       color: #f1f5f9;
@@ -59,7 +59,7 @@
       letter-spacing: 6px;
     }
 
-    h2, .section-title, .row, .btn-group, pre, .or-divider {
+    h2, .section-title, .row, .btn-group, .chat-preview-wrap, .or-divider {
       position: relative;
       z-index: 2;
     }
@@ -184,19 +184,40 @@
       color: #fff;
       box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
     }
-    
-    pre {
-      background: #080f1e;
-      border: 1px solid #1e3057;
-      border-left: 4px solid #38bdf8;
-      border-radius: 10px;
+
+    .chat-preview-wrap {
+      margin-top: 20px;
+      background: #091422;
+      border-radius: 14px;
       padding: 14px;
-      font-size: 0.85rem;
-      color: #e2e8f0;
+      border: 1px solid #1c2e4a;
+    }
+    .chat-label {
+      font-size: 0.72rem;
+      color: #38bdf8;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .wa-bubble {
+      background-color: #d9fdd3;
+      color: #111b21;
+      border-radius: 10px;
+      border-top-left-radius: 3px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
       white-space: pre-wrap;
       word-wrap: break-word;
-      line-height: 1.5;
-      margin-top: 18px;
+      user-select: text;
+    }
+    .wa-link {
+      color: #027eb5;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -213,7 +234,7 @@
       <input type="number" id="lcvCount" value="1" />
     </div>
     <div class="col">
-      <label>Pumps Used</label>
+      <label>Pumps Used (Auto-detects if left default)</label>
       <input type="text" id="pumpsUsed" value="P21A & P21B" />
     </div>
   </div>
@@ -223,7 +244,7 @@
     <div class="col">
       <label>Pump P21A Start Time</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21aStart" placeholder="e.g.04:27" maxlength="5" />
+        <input type="text" inputmode="numeric" id="p21aStart" placeholder="00:00" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21aStartAmpm" value="AM" onchange="syncAmpm()"/><span>AM</span></label>
           <label><input type="radio" name="p21aStartAmpm" value="PM" checked onchange="syncAmpm()"/><span>PM</span></label>
@@ -233,7 +254,7 @@
     <div class="col">
       <label>Pump P21A Stop Time</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21aStop" placeholder="e.g.05:27" maxlength="5" />
+        <input type="text" inputmode="numeric" id="p21aStop" placeholder="00:00" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21aStopAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21aStopAmpm" value="PM" checked/><span>PM</span></label>
@@ -246,7 +267,7 @@
     <div class="col">
       <label>Pump P21B Start Time (Auto)</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21bStart" placeholder="e.g.04:27" maxlength="5" />
+        <input type="text" inputmode="numeric" id="p21bStart" placeholder="00:00" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21bStartAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21bStartAmpm" value="PM" checked/><span>PM</span></label>
@@ -254,9 +275,9 @@
       </div>
     </div>
     <div class="col">
-      <label>Pump P21B Stop Time</label>
+      <label>Pump P21B Stop Time (Leave blank/0 if not used)</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21bStop" placeholder="e.g.05:36" maxlength="5" />
+        <input type="text" inputmode="numeric" id="p21bStop" placeholder="00:00" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21bStopAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21bStopAmpm" value="PM" checked/><span>PM</span></label>
@@ -269,19 +290,19 @@
   <div class="row">
     <div class="col">
       <label>Tank 1A Before (KG)</label>
-      <input type="number" id="t1aBefore" placeholder="e.g. 15200" step="any" />
+      <input type="number" id="t1aBefore" placeholder="e.g. 15000" step="any" />
     </div>
     <div class="col">
       <label>Tank 1B Before (KG)</label>
-      <input type="number" id="t1bBefore" placeholder="e.g. 15243" step="any" />
+      <input type="number" id="t1bBefore" placeholder="e.g. 15000" step="any" />
     </div>
   </div>
 
   <div class="or-divider">OR (DIRECT TOTAL BEFORE)</div>
   <div class="row">
     <div class="col">
-      <label>Total Before Filling (KG) - Optional</label>
-      <input type="number" id="tTotalBeforeDirect" placeholder="e.g. 30443 (bypass 1A & 1B)" step="any" />
+      <label>Total 1A+1B Before Filling (KG) - Optional</label>
+      <input type="number" id="tTotalBeforeDirect" placeholder="e.g. 30000" step="any" />
     </div>
   </div>
 
@@ -313,11 +334,14 @@
     <button class="btn-copy" onclick="copyText()">Copy Text</button>
   </div>
 
-  <pre id="outputLog">Output preview will appear here...</pre>
+  <div class="chat-preview-wrap">
+    <div id="outputBubble" class="wa-bubble">Tap "Calculate" to generate the message...</div>
+  </div>
 </div>
 
 <script>
   let p21bManual = false;
+  let rawClipboardText = "";
 
   const timeInputs = ['p21aStart', 'p21aStop', 'p21bStart', 'p21bStop'];
 
@@ -400,9 +424,16 @@
     return r ? r.value : 'PM';
   }
 
+  function isTimeValid(val) {
+    if (!val) return false;
+    let clean = val.trim();
+    if (clean === "" || clean === "0" || clean === "00:00" || clean === "--") return false;
+    return clean.includes(':');
+  }
+
   function generateReport() {
     const lcv = document.getElementById('lcvCount').value.trim();
-    const pumps = document.getElementById('pumpsUsed').value.trim();
+    let pumpsInput = document.getElementById('pumpsUsed').value.trim();
 
     const p21aStart = document.getElementById('p21aStart').value.trim();
     const p21aStop = document.getElementById('p21aStop').value.trim();
@@ -424,6 +455,21 @@
     const fmB = parseFloat(document.getElementById('fmBefore').value);
     const fmA = parseFloat(document.getElementById('fmAfter').value);
 
+    // Determine pump usage based on whether valid start & stop times are provided
+    const isP21aActive = isTimeValid(p21aStart) && isTimeValid(p21aStop);
+    const isP21bActive = isTimeValid(p21bStart) && isTimeValid(p21bStop);
+
+    // Auto-update "Pumps Used" if set to the default combined string
+    if (pumpsInput === "P21A & P21B" || pumpsInput === "P21A" || pumpsInput === "P21B" || !pumpsInput) {
+      if (isP21aActive && isP21bActive) {
+        pumpsInput = "P21A & P21B";
+      } else if (isP21aActive) {
+        pumpsInput = "P21A";
+      } else if (isP21bActive) {
+        pumpsInput = "P21B";
+      }
+    }
+
     let tankBeforeTotal = null;
     if (!isNaN(directTotalB)) {
       tankBeforeTotal = directTotalB;
@@ -432,8 +478,9 @@
     }
 
     const hasValidBefore = tankBeforeTotal !== null;
+    const hasAtLeastOnePump = isP21aActive || isP21bActive;
 
-    const isMissing = !lcv || !pumps || !p21aStart || !p21aStop || !p21bStart || !p21bStop ||
+    const isMissing = !lcv || !pumpsInput || !hasAtLeastOnePump ||
                       !hasValidBefore || isNaN(t1aA) || isNaN(t1bA) ||
                       isNaN(fmB) || isNaN(fmA);
 
@@ -445,41 +492,84 @@
     const tankDiff = (tankBeforeTotal !== null && tankAfterTotal !== null) ? Math.abs(tankBeforeTotal - tankAfterTotal) : null;
     const fmDiff = (!isNaN(fmA) && !isNaN(fmB)) ? Math.abs(fmA - fmB) : null;
 
-    const report = 
-`CNG LCV filling completed. 
-Pump Used:- ${pumps || '--'}
+    const fmBVal = !isNaN(fmB) ? fmB : '--';
+    const fmAVal = !isNaN(fmA) ? fmA : '--';
+
+    // Build timing lines dynamically
+    let timingsRaw = [];
+    let timingsHtml = [];
+
+    if (isP21aActive) {
+      timingsRaw.push(`Pump P21A Start Time:- ${p21aStart} ${p21aStartAmpm}.\nPump P21A Stop Time:- ${p21aStop} ${p21aStopAmpm}.`);
+      timingsHtml.push(`Pump P21A Start Time:- ${p21aStart} ${p21aStartAmpm}.\nPump P21A Stop Time:- ${p21aStop} ${p21aStopAmpm}.`);
+    }
+
+    if (isP21bActive) {
+      timingsRaw.push(`Pump P21B Start Time:- ${p21bStart} ${p21bStartAmpm}.\nPump P21B Stop Time:- ${p21bStop} ${p21bStopAmpm}.`);
+      timingsHtml.push(`Pump P21B Start Time:- ${p21bStart} ${p21bStartAmpm}.\nPump P21B Stop Time:- ${p21bStop} ${p21bStopAmpm}.`);
+    }
+
+    // Fallback if neither pump is complete
+    if (!isP21aActive && !isP21bActive) {
+      timingsRaw.push(`Pump P21A Start Time:- ${p21aStart || '--'} ${p21aStartAmpm}.\nPump P21A Stop Time:- ${p21aStop || '--'} ${p21aStopAmpm}.`);
+      timingsHtml.push(`Pump P21A Start Time:- ${p21aStart || '--'} ${p21aStartAmpm}.\nPump P21A Stop Time:- ${p21aStop || '--'} ${p21aStopAmpm}.`);
+    }
+
+    const timingsJoinedRaw = timingsRaw.join('\n\n');
+    const timingsJoinedHtml = timingsHtml.join('\n\n');
+
+    // 1. Raw plain-text for copy/WhatsApp
+    rawClipboardText = 
+`CNG LCV filling completed.
+Pump Used:- ${pumpsInput || '--'}
 Number of LCV= ${lcv || '--'}
 
-Pump P21A Start Time:- ${p21aStart || '--'} ${p21aStartAmpm}.
-Pump P21A Stop Time:- ${p21aStop || '--'} ${p21aStopAmpm}.
-
-Pump P21B Start Time:- ${p21bStart || '--'} ${p21bStartAmpm}.
-Pump P21B Stop Time:- ${p21bStop || '--'} ${p21bStopAmpm}.
+${timingsJoinedRaw}
 
 Total Tank(1A+1B) Quantity Before LCV Filling:  ${tankBeforeTotal !== null ? tankBeforeTotal : '--'} KG
 
-Total Tank(1A+1B) Quantity After LCV Filling: ${tankAfterTotal !== null ? tankAfterTotal : '--'}  KG
+Total Tank(1A+1B) Quantity After LCV Filling: ${tankAfterTotal !== null ? tankAfterTotal : '--'} KG
 
 Difference: ${tankDiff !== null ? tankDiff : '--'} KG
 
 FM101 (Before Filling):
-${!isNaN(fmB) ? fmB : '--'} KG
+${fmBVal} KG
 FM101 (After Filling):
-${!isNaN(fmA) ? fmA : '--'} KG
+${fmAVal} KG
 
 Difference: ${fmDiff !== null ? fmDiff : '--'} KG`;
 
-    document.getElementById('outputLog').innerText = report;
+    // 2. HTML output for preview bubble
+    const htmlPreview = 
+`CNG LCV filling completed.
+Pump Used:- ${pumpsInput || '--'}
+Number of LCV= ${lcv || '--'}
+
+${timingsJoinedHtml}
+
+Total Tank(1A+1B) Quantity Before LCV Filling:  ${tankBeforeTotal !== null ? tankBeforeTotal : '--'} KG
+
+Total Tank(1A+1B) Quantity After LCV Filling: ${tankAfterTotal !== null ? tankAfterTotal : '--'} KG
+
+Difference: ${tankDiff !== null ? tankDiff : '--'} KG
+
+FM101 (Before Filling):
+<span class="wa-link">${fmBVal}</span> KG
+FM101 (After Filling):
+<span class="wa-link">${fmAVal}</span> KG
+
+Difference: ${fmDiff !== null ? fmDiff : '--'} KG`;
+
+    document.getElementById('outputBubble').innerHTML = htmlPreview;
   }
 
   function copyText() {
-    const text = document.getElementById('outputLog').innerText;
-    if (!text || text.startsWith('Output preview')) {
+    if (!rawClipboardText) {
       alert('Please calculate the report first!');
       return;
     }
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Report copied to clipboard!');
+    navigator.clipboard.writeText(rawClipboardText).then(() => {
+      alert('Report copied to clipboard! Paste directly into WhatsApp.');
     }).catch(() => {
       alert('Failed to copy. Please select and copy manually.');
     });
