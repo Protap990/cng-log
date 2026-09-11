@@ -223,7 +223,7 @@
     <div class="col">
       <label>Pump P21A Start Time</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21aStart" placeholder="04:27" oninput="syncStartTimes()" onkeyup="syncStartTimes()" />
+        <input type="text" inputmode="numeric" id="p21aStart" placeholder="04:27" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21aStartAmpm" value="AM" onchange="syncAmpm()"/><span>AM</span></label>
           <label><input type="radio" name="p21aStartAmpm" value="PM" checked onchange="syncAmpm()"/><span>PM</span></label>
@@ -233,7 +233,7 @@
     <div class="col">
       <label>Pump P21A Stop Time</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21aStop" placeholder="05:27" />
+        <input type="text" inputmode="numeric" id="p21aStop" placeholder="05:27" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21aStopAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21aStopAmpm" value="PM" checked/><span>PM</span></label>
@@ -246,7 +246,7 @@
     <div class="col">
       <label>Pump P21B Start Time (Auto)</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21bStart" placeholder="04:27" />
+        <input type="text" inputmode="numeric" id="p21bStart" placeholder="04:27" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21bStartAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21bStartAmpm" value="PM" checked/><span>PM</span></label>
@@ -256,7 +256,7 @@
     <div class="col">
       <label>Pump P21B Stop Time</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21bStop" placeholder="05:36" />
+        <input type="text" inputmode="numeric" id="p21bStop" placeholder="05:36" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21bStopAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21bStopAmpm" value="PM" checked/><span>PM</span></label>
@@ -318,10 +318,61 @@
 
 <script>
   let p21bManual = false;
-  const p21bStartInput = document.getElementById('p21bStart');
-  
-  p21bStartInput.addEventListener('input', () => { p21bManual = true; });
-  p21bStartInput.addEventListener('focus', () => { p21bManual = true; });
+
+  const timeInputs = ['p21aStart', 'p21aStop', 'p21bStart', 'p21bStop'];
+
+  function formatTimeInput(e) {
+    let input = e.target;
+    let digits = input.value.replace(/\D/g, ''); // Extract numbers only
+    
+    if (e.inputType === 'deleteContentBackward') {
+      return; // Allow direct backspacing
+    }
+
+    if (digits.length === 0) {
+      input.value = '';
+      return;
+    }
+
+    let first = parseInt(digits[0], 10);
+
+    // If first digit is > 1 (e.g. 2 to 9), it cannot be a 2-digit 12-hour value (max is 12)
+    // Automatically pad with leading zero and append colon
+    if (first > 1 && digits.length === 1) {
+      input.value = '0' + digits[0] + ':';
+      return;
+    }
+
+    if (digits.length >= 2) {
+      let hours = parseInt(digits.substring(0, 2), 10);
+      let mins = digits.substring(2, 4);
+
+      // Clamp hour between 01 and 12
+      if (hours > 12) {
+        hours = 12;
+      } else if (hours === 0) {
+        hours = 1;
+      }
+      let formattedHours = hours < 10 ? '0' + hours : '' + hours;
+
+      if (mins.length > 0) {
+        input.value = formattedHours + ':' + mins;
+      } else {
+        input.value = formattedHours + ':';
+      }
+    } else {
+      input.value = digits;
+    }
+  }
+
+  timeInputs.forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', (e) => {
+      formatTimeInput(e);
+      if (id === 'p21aStart') syncStartTimes();
+      if (id === 'p21bStart') p21bManual = true;
+    });
+  });
 
   function syncStartTimes() {
     if (!p21bManual) {
