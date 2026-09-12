@@ -244,17 +244,17 @@
     <div class="col">
       <label>Pump P21A Start Time</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21aStart" placeholder="00:00" maxlength="5" />
+        <input type="text" inputmode="numeric" id="p21aStart" placeholder="04:27" maxlength="5" />
         <div class="ampm-toggle">
-          <label><input type="radio" name="p21aStartAmpm" value="AM" onchange="syncAmpm()"/><span>AM</span></label>
-          <label><input type="radio" name="p21aStartAmpm" value="PM" checked onchange="syncAmpm()"/><span>PM</span></label>
+          <label><input type="radio" name="p21aStartAmpm" value="AM" onchange="handleStartAmpmChange('p21a')"/><span>AM</span></label>
+          <label><input type="radio" name="p21aStartAmpm" value="PM" checked onchange="handleStartAmpmChange('p21a')"/><span>PM</span></label>
         </div>
       </div>
     </div>
     <div class="col">
       <label>Pump P21A Stop Time</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21aStop" placeholder="00:00" maxlength="5" />
+        <input type="text" inputmode="numeric" id="p21aStop" placeholder="05:27" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21aStopAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21aStopAmpm" value="PM" checked/><span>PM</span></label>
@@ -267,17 +267,17 @@
     <div class="col">
       <label>Pump P21B Start Time (Auto)</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21bStart" placeholder="00:00" maxlength="5" />
+        <input type="text" inputmode="numeric" id="p21bStart" placeholder="04:27" maxlength="5" />
         <div class="ampm-toggle">
-          <label><input type="radio" name="p21bStartAmpm" value="AM"/><span>AM</span></label>
-          <label><input type="radio" name="p21bStartAmpm" value="PM" checked/><span>PM</span></label>
+          <label><input type="radio" name="p21bStartAmpm" value="AM" onchange="handleStartAmpmChange('p21b')"/><span>AM</span></label>
+          <label><input type="radio" name="p21bStartAmpm" value="PM" checked onchange="handleStartAmpmChange('p21b')"/><span>PM</span></label>
         </div>
       </div>
     </div>
     <div class="col">
       <label>Pump P21B Stop Time (Leave blank/0 if not used)</label>
       <div class="time-group">
-        <input type="text" inputmode="numeric" id="p21bStop" placeholder="00:00" maxlength="5" />
+        <input type="text" inputmode="numeric" id="p21bStop" placeholder="05:36" maxlength="5" />
         <div class="ampm-toggle">
           <label><input type="radio" name="p21bStopAmpm" value="AM"/><span>AM</span></label>
           <label><input type="radio" name="p21bStopAmpm" value="PM" checked/><span>PM</span></label>
@@ -290,19 +290,19 @@
   <div class="row">
     <div class="col">
       <label>Tank 1A Before (KG)</label>
-      <input type="number" id="t1aBefore" placeholder="e.g. 15000" step="any" />
+      <input type="number" id="t1aBefore" placeholder="e.g. 15200" step="any" />
     </div>
     <div class="col">
       <label>Tank 1B Before (KG)</label>
-      <input type="number" id="t1bBefore" placeholder="e.g. 15000" step="any" />
+      <input type="number" id="t1bBefore" placeholder="e.g. 15243" step="any" />
     </div>
   </div>
 
   <div class="or-divider">OR (DIRECT TOTAL BEFORE)</div>
   <div class="row">
     <div class="col">
-      <label>Total 1A+1B Before Filling (KG) - Optional</label>
-      <input type="number" id="tTotalBeforeDirect" placeholder="e.g. 30000" step="any" />
+      <label>Total Before Filling (KG) - Optional</label>
+      <input type="number" id="tTotalBeforeDirect" placeholder="e.g. 30443 (bypass 1A & 1B)" step="any" />
     </div>
   </div>
 
@@ -330,12 +330,13 @@
   </div>
 
   <div class="btn-group">
-    <button class="btn-calc" onclick="generateReport()">Calculate</button>
+    <button class="btn-calc" onclick="generateReport()">Calculate & Format</button>
     <button class="btn-copy" onclick="copyText()">Copy Text</button>
   </div>
 
   <div class="chat-preview-wrap">
-    <div id="outputBubble" class="wa-bubble">Tap "Calculate" to generate the message...</div>
+    <div class="chat-label">WhatsApp Message Preview (Tap to select or click copy)</div>
+    <div id="outputBubble" class="wa-bubble">Tap "Calculate & Format" to generate the message...</div>
   </div>
 </div>
 
@@ -395,18 +396,66 @@
     }
   }
 
+  // Automatic AM/PM Determination for Stop Time
+  function autoSetStopAmpm(pumpPrefix) {
+    const startInput = document.getElementById(`${pumpPrefix}Start`).value.trim();
+    const stopInput = document.getElementById(`${pumpPrefix}Stop`).value.trim();
+    const startAmpmElem = document.querySelector(`input[name="${pumpPrefix}StartAmpm"]:checked`);
+
+    if (!startAmpmElem) return;
+    const startAmpm = startAmpmElem.value;
+
+    // If stop time hasn't been entered with hours, simply follow start AM/PM
+    if (!stopInput.includes(':')) {
+      const radio = document.querySelector(`input[name="${pumpPrefix}StopAmpm"][value="${startAmpm}"]`);
+      if (radio) radio.checked = true;
+      return;
+    }
+
+    const stopHour = parseInt(stopInput.split(':')[0], 10);
+    const startHour = startInput.includes(':') ? parseInt(startInput.split(':')[0], 10) : NaN;
+
+    let targetStopAmpm = startAmpm;
+
+    // Boundary Rollover Logic (e.g., 11:xx PM -> 12:xx or 01:xx AM)
+    if (!isNaN(startHour) && startHour === 11 && (stopHour === 12 || stopHour <= 3)) {
+      targetStopAmpm = (startAmpm === 'PM') ? 'AM' : 'PM';
+    }
+
+    const stopRadio = document.querySelector(`input[name="${pumpPrefix}StopAmpm"][value="${targetStopAmpm}"]`);
+    if (stopRadio) stopRadio.checked = true;
+  }
+
+  function handleStartAmpmChange(pumpPrefix) {
+    if (pumpPrefix === 'p21a') syncAmpm();
+    autoSetStopAmpm(pumpPrefix);
+  }
+
   timeInputs.forEach(id => {
     const el = document.getElementById(id);
     el.addEventListener('input', (e) => {
       formatTimeInput(e);
-      if (id === 'p21aStart') syncStartTimes();
-      if (id === 'p21bStart') p21bManual = true;
+      if (id === 'p21aStart') {
+        syncStartTimes();
+        autoSetStopAmpm('p21a');
+      }
+      if (id === 'p21aStop') {
+        autoSetStopAmpm('p21a');
+      }
+      if (id === 'p21bStart') {
+        p21bManual = true;
+        autoSetStopAmpm('p21b');
+      }
+      if (id === 'p21bStop') {
+        autoSetStopAmpm('p21b');
+      }
     });
   });
 
   function syncStartTimes() {
     if (!p21bManual) {
       document.getElementById('p21bStart').value = document.getElementById('p21aStart').value;
+      autoSetStopAmpm('p21b');
     }
   }
 
@@ -415,7 +464,10 @@
     if (checked && !p21bManual) {
       const val = checked.value;
       const target = document.querySelector(`input[name="p21bStartAmpm"][value="${val}"]`);
-      if (target) target.checked = true;
+      if (target) {
+        target.checked = true;
+        autoSetStopAmpm('p21b');
+      }
     }
   }
 
@@ -455,11 +507,9 @@
     const fmB = parseFloat(document.getElementById('fmBefore').value);
     const fmA = parseFloat(document.getElementById('fmAfter').value);
 
-    // Determine pump usage based on whether valid start & stop times are provided
     const isP21aActive = isTimeValid(p21aStart) && isTimeValid(p21aStop);
     const isP21bActive = isTimeValid(p21bStart) && isTimeValid(p21bStop);
 
-    // Auto-update "Pumps Used" if set to the default combined string
     if (pumpsInput === "P21A & P21B" || pumpsInput === "P21A" || pumpsInput === "P21B" || !pumpsInput) {
       if (isP21aActive && isP21bActive) {
         pumpsInput = "P21A & P21B";
@@ -495,7 +545,6 @@
     const fmBVal = !isNaN(fmB) ? fmB : '--';
     const fmAVal = !isNaN(fmA) ? fmA : '--';
 
-    // Build timing lines dynamically
     let timingsRaw = [];
     let timingsHtml = [];
 
@@ -509,7 +558,6 @@
       timingsHtml.push(`Pump P21B Start Time:- ${p21bStart} ${p21bStartAmpm}.\nPump P21B Stop Time:- ${p21bStop} ${p21bStopAmpm}.`);
     }
 
-    // Fallback if neither pump is complete
     if (!isP21aActive && !isP21bActive) {
       timingsRaw.push(`Pump P21A Start Time:- ${p21aStart || '--'} ${p21aStartAmpm}.\nPump P21A Stop Time:- ${p21aStop || '--'} ${p21aStopAmpm}.`);
       timingsHtml.push(`Pump P21A Start Time:- ${p21aStart || '--'} ${p21aStartAmpm}.\nPump P21A Stop Time:- ${p21aStop || '--'} ${p21aStopAmpm}.`);
@@ -518,7 +566,6 @@
     const timingsJoinedRaw = timingsRaw.join('\n\n');
     const timingsJoinedHtml = timingsHtml.join('\n\n');
 
-    // 1. Raw plain-text for copy/WhatsApp
     rawClipboardText = 
 `CNG LCV filling completed.
 Pump Used:- ${pumpsInput || '--'}
@@ -539,7 +586,6 @@ ${fmAVal} KG
 
 Difference: ${fmDiff !== null ? fmDiff : '--'} KG`;
 
-    // 2. HTML output for preview bubble
     const htmlPreview = 
 `CNG LCV filling completed.
 Pump Used:- ${pumpsInput || '--'}
