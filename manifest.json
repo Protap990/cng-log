@@ -1,0 +1,16 @@
+{
+  "name": "HPCL Calculator",
+  "short_name": "HPCL Calc",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#060b18",
+  "theme_color": "#132247",
+  "icons": [
+    {
+      "src": "hpcl.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
